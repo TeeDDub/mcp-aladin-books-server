@@ -8,46 +8,49 @@
 - **상세 정보**: ISBN으로 도서 상세 정보 조회
 - **베스트셀러**: 알라딘 베스트셀러 목록 조회 (카테고리별 검색 지원)
 - **카테고리 검색**: 도서 카테고리 검색 및 조회 (상위 레벨 우선 표시)
-- **인기 카테고리**: 자주 사용되는 주요 카테고리 목록 조회
-- **표 형태 표시**: 도서 정보를 표 형태로 정리하여 표시
-- **스마트 분류**: 대분류 > 중분류 > 소분류 순으로 우선순위 정렬
-- **TypeScript**: 타입 안전성과 개발 편의성 제공
 
-## 설치 및 실행
 
-### 1. 의존성 설치
+## 알라딘 API 키 발급
+이 MCP 서버를 사용하려면 알라딘의 API 키가 필요합니다.
+
+1. [알라딘 TTB 사이트](https://www.aladin.co.kr/ttb/wblog_manage.aspx)에 접속
+2. 회원가입 및 로그인
+3. API 키 발급 신청
+
+## DXT 설치
+[DXT 파일](mcp-aladin.dxt)
+
+1. 클로드 데스크톱에서 \[설정\] - \[확장프로그램\]을 선택
+2. 다운 받은 DXT 파일을 드래그 앤 드롭
+3. API 키를 입력 
+
+## 설정
+
+### 1. 의존성 설치 및 빌드
 
 ```bash
 npm install
-```
-
-### 2. 환경 변수 설정
-
-```bash
-cp env.example .env
-```
-
-`.env` 파일을 편집하여 알라딘 TTB 키를 설정하세요:
-
-```env
-ALADIN_TTB_KEY=your_aladin_ttb_key_here
-```
-
-### 3. 빌드 및 실행
-
-```bash
-# 빌드 (카테고리 파일도 함께 복사)
 npm run build
-
-# 프로덕션 실행
-npm start
-
-# 개발 모드 실행
-npm run dev
-
-# 빌드 준비 (의존성 설치 후 자동 빌드)
-npm run prepare
 ```
+
+### 2. MCP 클라이언트에 정보 입력
+```
+{
+  "mcpServers": {
+    "aladin-books": {
+      "command": "node",
+      "args": [
+        "<경로>/mcp-aladin-books-server/dist/index.js"
+      ],
+      "env": {
+        "ALADIN_TTB_KEY": "알라딘_TTB_키"
+      }
+    }
+  }
+}
+```
+
+
 
 ## 도구 (Tools)
 
@@ -100,12 +103,6 @@ ISBN으로 도서 상세 정보를 조회합니다.
 - `maxResults` (number): 최대 결과 개수 (1-50, 기본값: 10)
 - `categoryId` (string, optional): 카테고리 ID (베스트셀러 조회 시 카테고리 제한)
 
-## 알라딘 TTB 키 발급
-
-1. [알라딘 TTB 사이트](https://www.aladin.co.kr/ttb/wblog_manage.aspx)에 접속
-2. 회원가입 및 로그인
-3. TTB 키 발급 신청
-4. 발급받은 키를 환경 변수에 설정
 
 ## 사용 예시
 
