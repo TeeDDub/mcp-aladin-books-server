@@ -133,6 +133,7 @@ interface BookSearchResult {
   priceSales: number;
   link: string;
   pages?: number; // 페이지 수 추가
+  pricePerPage?: number; // 쪽단가 추가
 }
 
 interface BookDetailResult extends BookSearchResult {
@@ -147,8 +148,8 @@ function formatBooksTable(books: BookSearchResult[]): string {
   }
 
   // 테이블 헤더
-  let table = '| 제목 | 출판사 | 출간일 | 가격 | 페이지 |\n';
-  table += '|------|--------|--------|------|------|\n';
+  let table = '| 제목 | 출판사 | 출간일 | 가격 | 페이지 | 쪽단가 |\n';
+  table += '|------|--------|--------|------|------|------|\n';
 
   // 테이블 내용
   books.forEach(book => {
@@ -161,7 +162,12 @@ function formatBooksTable(books: BookSearchResult[]): string {
                   book.priceSales > 0 ? `${book.priceSales.toLocaleString()}원` : 'N/A';
     const pages = book.pages ? `${book.pages}p` : 'N/A';
     
-    table += `| ${title} | ${publisher} | ${pubDate} | ${price} | ${pages} |\n`;
+    // 쪽단가 계산 (정가/페이지수)
+    const pricePerPage = (book.priceStandard > 0 && book.pages && book.pages > 0) 
+      ? `${(book.priceStandard / book.pages).toFixed(2)}원` 
+      : 'N/A';
+    
+    table += `| ${title} | ${publisher} | ${pubDate} | ${price} | ${pages} | ${pricePerPage} |\n`;
   });
 
   return table;
@@ -240,7 +246,10 @@ server.registerTool(
         priceStandard: item.priceStandard || 0,
         priceSales: item.priceSales || 0,
         link: item.link || '',
-        pages: item.subInfo?.itemPage || undefined
+        pages: item.subInfo?.itemPage || undefined,
+        pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+          ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+          : undefined
       })) || [];
 
       return {
@@ -252,6 +261,8 @@ server.registerTool(
             `   출판사: ${book.publisher}\n` +
             `   출간일: ${book.pubDate}\n` +
             `   가격: ${book.priceStandard > 0 ? book.priceStandard.toLocaleString() : book.priceSales.toLocaleString()}원\n` +
+            `   페이지: ${book.pages}\n` +
+            `   쪽단가: ${book.pricePerPage}\n` +
             `   ISBN: ${book.isbn13}\n` +
             `   카테고리: ${book.categoryName}\n` +
             `   설명: ${book.description}\n`
@@ -317,7 +328,10 @@ server.registerTool(
         priceSales: item.priceSales || 0,
         link: item.link || '',
         customerReviewRank: item.customerReviewRank,
-        pages: item.subInfo?.itemPage || undefined
+        pages: item.subInfo?.itemPage || undefined,
+        pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+          ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+          : undefined
       };
 
       return {
@@ -333,7 +347,8 @@ server.registerTool(
             `가격: ${bookDetail.priceStandard > 0 ? bookDetail.priceStandard.toLocaleString() : bookDetail.priceSales.toLocaleString()}원\n` +
             `고객평점: ${bookDetail.customerReviewRank || 'N/A'}\n\n` +
             `설명: ${bookDetail.description}\n\n` +
-            `상세 설명: ${bookDetail.fullDescription}\n\n` +
+            `페이지: ${bookDetail.pages}\n` +
+            `쪽단가: ${bookDetail.pricePerPage}\n` +
             `링크: ${bookDetail.link}`
         }]
       };
@@ -393,7 +408,10 @@ server.registerTool(
         priceStandard: item.priceStandard || 0,
         priceSales: item.priceSales || 0,
         link: item.link || '',
-        pages: item.subInfo?.itemPage || undefined
+        pages: item.subInfo?.itemPage || undefined,
+        pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+          ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+          : undefined
       })) || [];
 
       const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
@@ -624,7 +642,10 @@ server.registerTool(
           priceStandard: item.priceStandard || 0,
           priceSales: item.priceSales || 0,
           link: item.link || '',
-          pages: item.subInfo?.itemPage || undefined
+          pages: item.subInfo?.itemPage || undefined,
+          pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+            ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+            : undefined
         })) || [];
 
       } else if (type === 'isbn') {
@@ -660,7 +681,10 @@ server.registerTool(
           priceStandard: item.priceStandard || 0,
           priceSales: item.priceSales || 0,
           link: item.link || '',
-          pages: item.subInfo?.itemPage || undefined
+          pages: item.subInfo?.itemPage || undefined,
+          pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+            ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+            : undefined
         }];
 
       } else if (type === 'bestseller') {
@@ -690,7 +714,10 @@ server.registerTool(
           priceStandard: item.priceStandard || 0,
           priceSales: item.priceSales || 0,
           link: item.link || '',
-          pages: item.subInfo?.itemPage || undefined
+          pages: item.subInfo?.itemPage || undefined,
+          pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+            ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+            : undefined
         })) || [];
       }
 
