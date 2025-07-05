@@ -1,0 +1,43 @@
+{
+  "name": "mcp-aladin-node",
+  "version": "1.0.0",
+  "description": "알라딘 도서 검색 MCP 서버 (Node.js)",
+  "author": "MCP Aladin Team",
+  "license": "ISC",
+  "type": "server",
+  "runtime": "node",
+  "entrypoint": "dist/index.js",
+  "capabilities": {
+    "tools": [
+      {
+        "name": "search_books",
+        "description": "알라딘에서 도서를 검색합니다."
+      },
+      {
+        "name": "get_book_detail",
+        "description": "ISBN을 이용해 도서의 상세 정보를 조회합니다."
+      },
+      {
+        "name": "get_bestsellers",
+        "description": "알라딘 베스트셀러 목록을 조회합니다."
+      }
+    ]
+  },
+  "config": {
+    "env": {
+      "ALADIN_TTB_KEY": {
+        "description": "알라딘 TTB API 키 (필수)",
+        "required": true,
+        "sensitive": true
+      }
+    }
+  },
+  "keywords": [
+    "mcp",
+    "aladin",
+    "books",
+    "search",
+    "nodejs",
+    "typescript"
+  ]
+} 
