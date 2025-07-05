@@ -102,7 +102,7 @@ ISBN으로 도서 상세 정보를 조회합니다.
 
 ## 알라딘 TTB 키 발급
 
-1. [알라딘 TTB 사이트](https://blog.aladin.co.kr/ttb/)에 접속
+1. [알라딘 TTB 사이트](https://www.aladin.co.kr/ttb/wblog_manage.aspx)에 접속
 2. 회원가입 및 로그인
 3. TTB 키 발급 신청
 4. 발급받은 키를 환경 변수에 설정
