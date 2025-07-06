@@ -58273,6 +58273,18 @@
             "mall": "국내도서"
           }
         ]
+      },
+      "인공지능": {
+        "name": "인공지능(AI)",
+        "level": 2,
+        "children": {},
+        "categories": [
+          {
+            "cid": "212364",
+            "name": "인공지능",
+            "mall": "국내도서"
+          }
+        ]
       }
     },
     "categories": [
