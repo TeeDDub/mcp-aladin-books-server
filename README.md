@@ -73,35 +73,65 @@ ISBN으로 도서 상세 정보를 조회합니다.
 도서 베스트셀러 목록을 조회합니다. 카테고리별 검색이 가능합니다.
 
 **매개변수:**
-- `queryType` (enum): 조회 타입 (Bestseller, ItemNewAll, ItemNewSpecial, ItemEditorChoice, BlogBest, 기본값: Bestseller)
 - `maxResults` (number): 최대 결과 개수 (1-100, 기본값: 10)
 - `start` (number): 검색 시작 번호 (기본값: 1)
 - `categoryId` (string, optional): 카테고리 ID (CID) - 특정 카테고리로 검색 제한
 
-### 4. search_categories
+### 4. get_new_books
+신간 전체 리스트를 조회합니다. 카테고리별 검색이 가능합니다.
+
+**매개변수:**
+- `maxResults` (number): 최대 결과 개수 (1-100, 기본값: 10)
+- `start` (number): 검색 시작 번호 (기본값: 1)
+- `categoryId` (string, optional): 카테고리 ID (CID) - 특정 카테고리로 검색 제한
+
+### 5. get_special_new_books
+주목할 만한 신간 리스트를 조회합니다. 카테고리별 검색이 가능합니다.
+
+**매개변수:**
+- `maxResults` (number): 최대 결과 개수 (1-100, 기본값: 10)
+- `start` (number): 검색 시작 번호 (기본값: 1)
+- `categoryId` (string, optional): 카테고리 ID (CID) - 특정 카테고리로 검색 제한
+
+### 6. get_editor_choice
+편집자 추천 리스트를 조회합니다. 카테고리별 검색이 가능합니다.
+
+**매개변수:**
+- `maxResults` (number): 최대 결과 개수 (1-100, 기본값: 10)
+- `start` (number): 검색 시작 번호 (기본값: 1)
+- `categoryId` (string, optional): 카테고리 ID (CID) - 특정 카테고리로 검색 제한
+
+### 7. get_blogger_best
+블로거 베스트셀러 목록을 조회합니다. 국내도서만 조회 가능하며, 카테고리별 검색이 가능합니다.
+
+**매개변수:**
+- `maxResults` (number): 최대 결과 개수 (1-100, 기본값: 10)
+- `start` (number): 검색 시작 번호 (기본값: 1)
+- `categoryId` (string, optional): 카테고리 ID (CID) - 특정 카테고리로 검색 제한
+
+### 8. search_categories
 도서 카테고리를 검색합니다. 상위 레벨 카테고리를 우선으로 표시합니다.
 
 **매개변수:**
 - `searchTerm` (string): 검색할 카테고리 이름
 - `maxResults` (number): 최대 결과 개수 (1-50, 기본값: 20)
 
-### 5. get_popular_categories
+### 9. get_popular_categories
 자주 사용되는 주요 카테고리 목록을 조회합니다. 상위 레벨 카테고리를 우선으로 표시합니다.
 
 **매개변수:**
 - `limit` (number): 표시할 카테고리 개수 (1-50, 기본값: 20)
 
-### 6. format_books_table
-도서 정보를 표 형태로 정리하여 표시합니다. 검색, ISBN 조회, 베스트셀러 조회를 지원합니다.
+### 10. format_books_table
+도서 정보를 표 형태로 정리하여 표시합니다. 검색, ISBN 조회, 각종 도서 리스트 조회를 지원합니다.
 
 **매개변수:**
-- `type` (enum): 조회 타입 (search, isbn, bestseller)
+- `type` (enum): 조회 타입 (search, isbn, bestseller, new_books, special_new_books, editor_choice, blogger_best)
 - `query` (string, optional): 검색어 (type이 search인 경우 필수)
 - `isbn` (string, optional): ISBN (type이 isbn인 경우 필수)
 - `searchType` (enum): 검색 타입 (Title, Author, Publisher, Keyword, 기본값: Title)
-- `queryType` (enum): 베스트셀러 조회 타입 (Bestseller, ItemNewAll, ItemNewSpecial, ItemEditorChoice, BlogBest, 기본값: Bestseller)
 - `maxResults` (number): 최대 결과 개수 (1-50, 기본값: 10)
-- `categoryId` (string, optional): 카테고리 ID (베스트셀러 조회 시 카테고리 제한)
+- `categoryId` (string, optional): 카테고리 ID (리스트 조회 시 카테고리 제한)
 
 
 ## 사용 예시
@@ -123,13 +153,38 @@ await callTool('get_book_detail', {
 
 // 전체 도서 베스트셀러 조회
 await callTool('get_bestsellers', {
-  queryType: 'Bestseller',
   maxResults: 10
 });
 
 // 카테고리별 도서 베스트셀러 조회
 await callTool('get_bestsellers', {
-  queryType: 'Bestseller',
+  maxResults: 10,
+  categoryId: '798' // 예: 컴퓨터 카테고리
+});
+
+// 신간 전체 리스트 조회
+await callTool('get_new_books', {
+  maxResults: 10
+});
+
+// 카테고리별 신간 조회
+await callTool('get_new_books', {
+  maxResults: 10,
+  categoryId: '798' // 예: 컴퓨터 카테고리
+});
+
+// 주목할 만한 신간 리스트 조회
+await callTool('get_special_new_books', {
+  maxResults: 10
+});
+
+// 편집자 추천 리스트 조회
+await callTool('get_editor_choice', {
+  maxResults: 10
+});
+
+// 블로거 베스트셀러 조회 (국내도서만)
+await callTool('get_blogger_best', {
   maxResults: 10,
   categoryId: '798' // 예: 컴퓨터 카테고리
 });
@@ -156,7 +211,31 @@ await callTool('format_books_table', {
 // 도서 정보 표 형태 표시 (베스트셀러)
 await callTool('format_books_table', {
   type: 'bestseller',
-  queryType: 'Bestseller',
+  maxResults: 10,
+  categoryId: '798'
+});
+
+// 도서 정보 표 형태 표시 (신간 전체)
+await callTool('format_books_table', {
+  type: 'new_books',
+  maxResults: 10
+});
+
+// 도서 정보 표 형태 표시 (주목할 만한 신간)
+await callTool('format_books_table', {
+  type: 'special_new_books',
+  maxResults: 10
+});
+
+// 도서 정보 표 형태 표시 (편집자 추천)
+await callTool('format_books_table', {
+  type: 'editor_choice',
+  maxResults: 10
+});
+
+// 도서 정보 표 형태 표시 (블로거 베스트셀러)
+await callTool('format_books_table', {
+  type: 'blogger_best',
   maxResults: 10,
   categoryId: '798'
 });

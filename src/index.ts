@@ -372,23 +372,21 @@ server.registerTool(
     title: '도서 베스트셀러',
     description: '알라딘 도서 베스트셀러 목록을 조회합니다. 카테고리별로 검색할 수 있습니다.',
     inputSchema: {
-      queryType: z.enum(['Bestseller', 'ItemNewAll', 'ItemNewSpecial', 'ItemEditorChoice', 'BlogBest']).default('Bestseller').describe('조회 타입'),
       maxResults: z.number().min(1).max(100).default(10).describe('최대 결과 개수'),
       start: z.number().min(1).default(1).describe('검색 시작 번호'),
       categoryId: z.string().optional().describe('카테고리 ID (CID) - 특정 카테고리로 검색을 제한할 때 사용')
     }
   },
-  async ({ queryType, maxResults, start, categoryId }) => {
+  async ({ maxResults, start, categoryId }) => {
     try {
       const params: any = {
-        QueryType: queryType,
+        QueryType: 'Bestseller',
         MaxResults: maxResults,
         start: start,
-        SearchTarget: 'Book', // 도서만 검색
+        SearchTarget: 'Book',
         Cover: 'Big'
       };
 
-      // 카테고리 ID가 제공된 경우 추가
       if (categoryId) {
         params.CategoryId = categoryId;
       }
@@ -419,7 +417,7 @@ server.registerTool(
       return {
         content: [{
           type: 'text',
-          text: `베스트셀러 목록 (${queryType})${categoryText}:\n\n${books.map((book, index) => 
+          text: `📈 베스트셀러 목록${categoryText}:\n\n${books.map((book, index) => 
             `${index + 1}. ${book.title}\n` +
             `   저자: ${book.author}\n` +
             `   출판사: ${book.publisher}\n` +
@@ -437,6 +435,314 @@ server.registerTool(
         content: [{
           type: 'text',
           text: `베스트셀러 조회 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// 신간 전체 리스트 도구 등록
+server.registerTool(
+  'get_new_books',
+  {
+    title: '신간 전체 리스트',
+    description: '알라딘 신간 전체 리스트를 조회합니다. 카테고리별로 검색할 수 있습니다.',
+    inputSchema: {
+      maxResults: z.number().min(1).max(100).default(10).describe('최대 결과 개수'),
+      start: z.number().min(1).default(1).describe('검색 시작 번호'),
+      categoryId: z.string().optional().describe('카테고리 ID (CID) - 특정 카테고리로 검색을 제한할 때 사용')
+    }
+  },
+  async ({ maxResults, start, categoryId }) => {
+    try {
+      const params: any = {
+        QueryType: 'ItemNewAll',
+        MaxResults: maxResults,
+        start: start,
+        SearchTarget: 'Book',
+        Cover: 'Big'
+      };
+
+      if (categoryId) {
+        params.CategoryId = categoryId;
+      }
+
+      const result = await callAladinApi('ItemList.aspx', params);
+      
+      const books: BookSearchResult[] = result.item?.map((item: any) => ({
+        title: item.title || '',
+        author: item.author || '',
+        publisher: item.publisher || '',
+        pubDate: item.pubDate || '',
+        isbn: item.isbn || '',
+        isbn13: item.isbn13 || '',
+        cover: item.cover || '',
+        categoryName: item.categoryName || '',
+        description: item.description || '',
+        priceStandard: item.priceStandard || 0,
+        priceSales: item.priceSales || 0,
+        link: item.link || '',
+        pages: item.subInfo?.itemPage || undefined,
+        pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+          ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+          : undefined
+      })) || [];
+
+      const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
+      
+      return {
+        content: [{
+          type: 'text',
+          text: `🆕 신간 전체 리스트${categoryText}:\n\n${books.map((book, index) => 
+            `${index + 1}. ${book.title}\n` +
+            `   저자: ${book.author}\n` +
+            `   출판사: ${book.publisher}\n` +
+            `   출간일: ${book.pubDate}\n` +
+            `   정가: ${book.priceStandard.toLocaleString()}원\n` +
+            `   ISBN: ${book.isbn13}\n` +
+            `   카테고리: ${book.categoryName}\n` +
+            `   설명: ${book.description}\n`
+          ).join('\n')}`
+        }]
+      };
+    } catch (error) {
+      logger.error(`신간 전체 리스트 조회 중 오류 발생: ${error}`);
+      return {
+        content: [{
+          type: 'text',
+          text: `신간 전체 리스트 조회 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// 주목할 만한 신간 리스트 도구 등록
+server.registerTool(
+  'get_special_new_books',
+  {
+    title: '주목할 만한 신간 리스트',
+    description: '알라딘 주목할 만한 신간 리스트를 조회합니다. 카테고리별로 검색할 수 있습니다.',
+    inputSchema: {
+      maxResults: z.number().min(1).max(100).default(10).describe('최대 결과 개수'),
+      start: z.number().min(1).default(1).describe('검색 시작 번호'),
+      categoryId: z.string().optional().describe('카테고리 ID (CID) - 특정 카테고리로 검색을 제한할 때 사용')
+    }
+  },
+  async ({ maxResults, start, categoryId }) => {
+    try {
+      const params: any = {
+        QueryType: 'ItemNewSpecial',
+        MaxResults: maxResults,
+        start: start,
+        SearchTarget: 'Book',
+        Cover: 'Big'
+      };
+
+      if (categoryId) {
+        params.CategoryId = categoryId;
+      }
+
+      const result = await callAladinApi('ItemList.aspx', params);
+      
+      const books: BookSearchResult[] = result.item?.map((item: any) => ({
+        title: item.title || '',
+        author: item.author || '',
+        publisher: item.publisher || '',
+        pubDate: item.pubDate || '',
+        isbn: item.isbn || '',
+        isbn13: item.isbn13 || '',
+        cover: item.cover || '',
+        categoryName: item.categoryName || '',
+        description: item.description || '',
+        priceStandard: item.priceStandard || 0,
+        priceSales: item.priceSales || 0,
+        link: item.link || '',
+        pages: item.subInfo?.itemPage || undefined,
+        pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+          ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+          : undefined
+      })) || [];
+
+      const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
+      
+      return {
+        content: [{
+          type: 'text',
+          text: `⭐ 주목할 만한 신간 리스트${categoryText}:\n\n${books.map((book, index) => 
+            `${index + 1}. ${book.title}\n` +
+            `   저자: ${book.author}\n` +
+            `   출판사: ${book.publisher}\n` +
+            `   출간일: ${book.pubDate}\n` +
+            `   정가: ${book.priceStandard.toLocaleString()}원\n` +
+            `   ISBN: ${book.isbn13}\n` +
+            `   카테고리: ${book.categoryName}\n` +
+            `   설명: ${book.description}\n`
+          ).join('\n')}`
+        }]
+      };
+    } catch (error) {
+      logger.error(`주목할 만한 신간 리스트 조회 중 오류 발생: ${error}`);
+      return {
+        content: [{
+          type: 'text',
+          text: `주목할 만한 신간 리스트 조회 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// 편집자 추천 리스트 도구 등록
+server.registerTool(
+  'get_editor_choice',
+  {
+    title: '편집자 추천 리스트',
+    description: '알라딘 편집자 추천 리스트를 조회합니다. 카테고리별로 검색할 수 있습니다.',
+    inputSchema: {
+      maxResults: z.number().min(1).max(100).default(10).describe('최대 결과 개수'),
+      start: z.number().min(1).default(1).describe('검색 시작 번호'),
+      categoryId: z.string().optional().describe('카테고리 ID (CID) - 특정 카테고리로 검색을 제한할 때 사용')
+    }
+  },
+  async ({ maxResults, start, categoryId }) => {
+    try {
+      const params: any = {
+        QueryType: 'ItemEditorChoice',
+        MaxResults: maxResults,
+        start: start,
+        SearchTarget: 'Book',
+        Cover: 'Big'
+      };
+
+      if (categoryId) {
+        params.CategoryId = categoryId;
+      }
+
+      const result = await callAladinApi('ItemList.aspx', params);
+      
+      const books: BookSearchResult[] = result.item?.map((item: any) => ({
+        title: item.title || '',
+        author: item.author || '',
+        publisher: item.publisher || '',
+        pubDate: item.pubDate || '',
+        isbn: item.isbn || '',
+        isbn13: item.isbn13 || '',
+        cover: item.cover || '',
+        categoryName: item.categoryName || '',
+        description: item.description || '',
+        priceStandard: item.priceStandard || 0,
+        priceSales: item.priceSales || 0,
+        link: item.link || '',
+        pages: item.subInfo?.itemPage || undefined,
+        pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+          ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+          : undefined
+      })) || [];
+
+      const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
+      
+      return {
+        content: [{
+          type: 'text',
+          text: `👨‍💼 편집자 추천 리스트${categoryText}:\n\n${books.map((book, index) => 
+            `${index + 1}. ${book.title}\n` +
+            `   저자: ${book.author}\n` +
+            `   출판사: ${book.publisher}\n` +
+            `   출간일: ${book.pubDate}\n` +
+            `   정가: ${book.priceStandard.toLocaleString()}원\n` +
+            `   ISBN: ${book.isbn13}\n` +
+            `   카테고리: ${book.categoryName}\n` +
+            `   설명: ${book.description}\n`
+          ).join('\n')}`
+        }]
+      };
+    } catch (error) {
+      logger.error(`편집자 추천 리스트 조회 중 오류 발생: ${error}`);
+      return {
+        content: [{
+          type: 'text',
+          text: `편집자 추천 리스트 조회 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// 블로거 베스트셀러 도구 등록
+server.registerTool(
+  'get_blogger_best',
+  {
+    title: '블로거 베스트셀러',
+    description: '알라딘 블로거 베스트셀러 목록을 조회합니다. 국내도서만 조회 가능하며, 카테고리별로 검색할 수 있습니다.',
+    inputSchema: {
+      maxResults: z.number().min(1).max(100).default(10).describe('최대 결과 개수'),
+      start: z.number().min(1).default(1).describe('검색 시작 번호'),
+      categoryId: z.string().optional().describe('카테고리 ID (CID) - 특정 카테고리로 검색을 제한할 때 사용')
+    }
+  },
+  async ({ maxResults, start, categoryId }) => {
+    try {
+      const params: any = {
+        QueryType: 'BlogBest',
+        MaxResults: maxResults,
+        start: start,
+        SearchTarget: 'Book',
+        Cover: 'Big'
+      };
+
+      if (categoryId) {
+        params.CategoryId = categoryId;
+      }
+
+      const result = await callAladinApi('ItemList.aspx', params);
+      
+      const books: BookSearchResult[] = result.item?.map((item: any) => ({
+        title: item.title || '',
+        author: item.author || '',
+        publisher: item.publisher || '',
+        pubDate: item.pubDate || '',
+        isbn: item.isbn || '',
+        isbn13: item.isbn13 || '',
+        cover: item.cover || '',
+        categoryName: item.categoryName || '',
+        description: item.description || '',
+        priceStandard: item.priceStandard || 0,
+        priceSales: item.priceSales || 0,
+        link: item.link || '',
+        pages: item.subInfo?.itemPage || undefined,
+        pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+          ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+          : undefined
+      })) || [];
+
+      const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
+      
+      return {
+        content: [{
+          type: 'text',
+          text: `📝 블로거 베스트셀러${categoryText} (국내도서만):\n\n${books.map((book, index) => 
+            `${index + 1}. ${book.title}\n` +
+            `   저자: ${book.author}\n` +
+            `   출판사: ${book.publisher}\n` +
+            `   출간일: ${book.pubDate}\n` +
+            `   정가: ${book.priceStandard.toLocaleString()}원\n` +
+            `   ISBN: ${book.isbn13}\n` +
+            `   카테고리: ${book.categoryName}\n` +
+            `   설명: ${book.description}\n`
+          ).join('\n')}`
+        }]
+      };
+    } catch (error) {
+      logger.error(`블로거 베스트셀러 조회 중 오류 발생: ${error}`);
+      return {
+        content: [{
+          type: 'text',
+          text: `블로거 베스트셀러 조회 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`
         }],
         isError: true
       };
@@ -599,18 +905,17 @@ server.registerTool(
   'format_books_table',
   {
     title: '도서 정보 표 형태 표시',
-    description: '도서 정보를 표 형태로 정리하여 표시합니다. 검색, ISBN 조회, 베스트셀러 조회를 지원합니다.',
+    description: '도서 정보를 표 형태로 정리하여 표시합니다. 검색, ISBN 조회, 각종 도서 리스트 조회를 지원합니다.',
     inputSchema: {
-      type: z.enum(['search', 'isbn', 'bestseller']).describe('조회 타입: search(검색), isbn(ISBN 조회), bestseller(베스트셀러)'),
+      type: z.enum(['search', 'isbn', 'bestseller', 'new_books', 'special_new_books', 'editor_choice', 'blogger_best']).describe('조회 타입'),
       query: z.string().optional().describe('검색어 (type이 search인 경우 필수)'),
       isbn: z.string().optional().describe('ISBN (type이 isbn인 경우 필수)'),
       searchType: z.enum(['Title', 'Author', 'Publisher', 'Keyword']).default('Title').describe('검색 타입 (type이 search인 경우)'),
-      queryType: z.enum(['Bestseller', 'ItemNewAll', 'ItemNewSpecial', 'ItemEditorChoice', 'BlogBest']).default('Bestseller').describe('베스트셀러 조회 타입 (type이 bestseller인 경우)'),
       maxResults: z.number().min(1).max(50).default(10).describe('최대 결과 개수'),
-      categoryId: z.string().optional().describe('카테고리 ID (베스트셀러 조회 시 카테고리 제한)')
+      categoryId: z.string().optional().describe('카테고리 ID (리스트 조회 시 카테고리 제한)')
     }
   },
-  async ({ type, query, isbn, searchType, queryType, maxResults, categoryId }) => {
+  async ({ type, query, isbn, searchType, maxResults, categoryId }) => {
     try {
       let books: BookSearchResult[] = [];
 
@@ -689,7 +994,139 @@ server.registerTool(
 
       } else if (type === 'bestseller') {
         const params: any = {
-          QueryType: queryType,
+          QueryType: 'Bestseller',
+          MaxResults: maxResults,
+          start: 1,
+          SearchTarget: 'Book',
+          Cover: 'Big'
+        };
+
+        if (categoryId) {
+          params.CategoryId = categoryId;
+        }
+
+        const result = await callAladinApi('ItemList.aspx', params);
+        books = result.item?.map((item: any) => ({
+          title: item.title || '',
+          author: item.author || '',
+          publisher: item.publisher || '',
+          pubDate: item.pubDate || '',
+          isbn: item.isbn || '',
+          isbn13: item.isbn13 || '',
+          cover: item.cover || '',
+          categoryName: item.categoryName || '',
+          description: item.description || '',
+          priceStandard: item.priceStandard || 0,
+          priceSales: item.priceSales || 0,
+          link: item.link || '',
+          pages: item.subInfo?.itemPage || undefined,
+          pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+            ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+            : undefined
+        })) || [];
+
+      } else if (type === 'new_books') {
+        const params: any = {
+          QueryType: 'ItemNewAll',
+          MaxResults: maxResults,
+          start: 1,
+          SearchTarget: 'Book',
+          Cover: 'Big'
+        };
+
+        if (categoryId) {
+          params.CategoryId = categoryId;
+        }
+
+        const result = await callAladinApi('ItemList.aspx', params);
+        books = result.item?.map((item: any) => ({
+          title: item.title || '',
+          author: item.author || '',
+          publisher: item.publisher || '',
+          pubDate: item.pubDate || '',
+          isbn: item.isbn || '',
+          isbn13: item.isbn13 || '',
+          cover: item.cover || '',
+          categoryName: item.categoryName || '',
+          description: item.description || '',
+          priceStandard: item.priceStandard || 0,
+          priceSales: item.priceSales || 0,
+          link: item.link || '',
+          pages: item.subInfo?.itemPage || undefined,
+          pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+            ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+            : undefined
+        })) || [];
+
+      } else if (type === 'special_new_books') {
+        const params: any = {
+          QueryType: 'ItemNewSpecial',
+          MaxResults: maxResults,
+          start: 1,
+          SearchTarget: 'Book',
+          Cover: 'Big'
+        };
+
+        if (categoryId) {
+          params.CategoryId = categoryId;
+        }
+
+        const result = await callAladinApi('ItemList.aspx', params);
+        books = result.item?.map((item: any) => ({
+          title: item.title || '',
+          author: item.author || '',
+          publisher: item.publisher || '',
+          pubDate: item.pubDate || '',
+          isbn: item.isbn || '',
+          isbn13: item.isbn13 || '',
+          cover: item.cover || '',
+          categoryName: item.categoryName || '',
+          description: item.description || '',
+          priceStandard: item.priceStandard || 0,
+          priceSales: item.priceSales || 0,
+          link: item.link || '',
+          pages: item.subInfo?.itemPage || undefined,
+          pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+            ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+            : undefined
+        })) || [];
+
+      } else if (type === 'editor_choice') {
+        const params: any = {
+          QueryType: 'ItemEditorChoice',
+          MaxResults: maxResults,
+          start: 1,
+          SearchTarget: 'Book',
+          Cover: 'Big'
+        };
+
+        if (categoryId) {
+          params.CategoryId = categoryId;
+        }
+
+        const result = await callAladinApi('ItemList.aspx', params);
+        books = result.item?.map((item: any) => ({
+          title: item.title || '',
+          author: item.author || '',
+          publisher: item.publisher || '',
+          pubDate: item.pubDate || '',
+          isbn: item.isbn || '',
+          isbn13: item.isbn13 || '',
+          cover: item.cover || '',
+          categoryName: item.categoryName || '',
+          description: item.description || '',
+          priceStandard: item.priceStandard || 0,
+          priceSales: item.priceSales || 0,
+          link: item.link || '',
+          pages: item.subInfo?.itemPage || undefined,
+          pricePerPage: (item.priceStandard > 0 && item.subInfo?.itemPage > 0) 
+            ? parseFloat((item.priceStandard / item.subInfo.itemPage).toFixed(2)) 
+            : undefined
+        })) || [];
+
+      } else if (type === 'blogger_best') {
+        const params: any = {
+          QueryType: 'BlogBest',
           MaxResults: maxResults,
           start: 1,
           SearchTarget: 'Book',
@@ -731,7 +1168,19 @@ server.registerTool(
         title = `📚 도서 상세 정보 (ISBN: ${isbn})`;
       } else if (type === 'bestseller') {
         const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
-        title = `📚 베스트셀러 목록 (${queryType})${categoryText}`;
+        title = `📚 베스트셀러 목록${categoryText}`;
+      } else if (type === 'new_books') {
+        const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
+        title = `📚 신간 전체 리스트${categoryText}`;
+      } else if (type === 'special_new_books') {
+        const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
+        title = `📚 주목할 만한 신간 리스트${categoryText}`;
+      } else if (type === 'editor_choice') {
+        const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
+        title = `📚 편집자 추천 리스트${categoryText}`;
+      } else if (type === 'blogger_best') {
+        const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
+        title = `📚 블로거 베스트셀러${categoryText}`;
       }
 
       return {
