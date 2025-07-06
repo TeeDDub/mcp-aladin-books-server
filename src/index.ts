@@ -370,14 +370,17 @@ server.registerTool(
   'get_bestsellers',
   {
     title: '도서 베스트셀러',
-    description: '알라딘 도서 베스트셀러 목록을 조회합니다. 카테고리별로 검색할 수 있습니다.',
+    description: '알라딘 도서 베스트셀러 목록을 조회합니다. 카테고리별로 검색할 수 있으며, 특정 주간의 베스트셀러를 조회할 수 있습니다. 특정 주간을 조회할 때는 연도, 월, 주를 모두 입력해주세요.',
     inputSchema: {
       maxResults: z.number().min(1).max(100).default(10).describe('최대 결과 개수'),
       start: z.number().min(1).default(1).describe('검색 시작 번호'),
-      categoryId: z.string().optional().describe('카테고리 ID (CID) - 특정 카테고리로 검색을 제한할 때 사용')
+      categoryId: z.string().optional().describe('카테고리 ID (CID) - 특정 카테고리로 검색을 제한할 때 사용'),
+      year: z.number().min(2000).max(2030).optional().describe('조회할 연도 (예: 2025) - 생략하면 현재 주간'),
+      month: z.number().min(1).max(12).optional().describe('조회할 월 (1-12) - 생략하면 현재 주간'),
+      week: z.number().min(1).max(5).optional().describe('조회할 주 (1-5) - 생략하면 현재 주간')
     }
   },
-  async ({ maxResults, start, categoryId }) => {
+  async ({ maxResults, start, categoryId, year, month, week }) => {
     try {
       const params: any = {
         QueryType: 'Bestseller',
@@ -389,6 +392,18 @@ server.registerTool(
 
       if (categoryId) {
         params.CategoryId = categoryId;
+      }
+
+      if (year) {
+        params.Year = year;
+      }
+      
+      if (month) {
+        params.Month = month;
+      }
+      
+      if (week) {
+        params.Week = week;
       }
 
       const result = await callAladinApi('ItemList.aspx', params);
@@ -413,11 +428,12 @@ server.registerTool(
       })) || [];
 
       const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
+      const timeText = (year && month && week) ? ` (${year}년 ${month}월 ${week}주)` : '';
       
       return {
         content: [{
           type: 'text',
-          text: `📈 베스트셀러 목록${categoryText}:\n\n${books.map((book, index) => 
+          text: `📈 베스트셀러 목록${categoryText}${timeText}:\n\n${books.map((book, index) => 
             `${index + 1}. ${book.title}\n` +
             `   저자: ${book.author}\n` +
             `   출판사: ${book.publisher}\n` +
@@ -912,10 +928,13 @@ server.registerTool(
       isbn: z.string().optional().describe('ISBN (type이 isbn인 경우 필수)'),
       searchType: z.enum(['Title', 'Author', 'Publisher', 'Keyword']).default('Title').describe('검색 타입 (type이 search인 경우)'),
       maxResults: z.number().min(1).max(50).default(10).describe('최대 결과 개수'),
-      categoryId: z.string().optional().describe('카테고리 ID (리스트 조회 시 카테고리 제한)')
+      categoryId: z.string().optional().describe('카테고리 ID (리스트 조회 시 카테고리 제한)'),
+      year: z.number().min(2000).max(2030).optional().describe('조회할 연도 (베스트셀러 조회 시)'),
+      month: z.number().min(1).max(12).optional().describe('조회할 월 (베스트셀러 조회 시)'),
+      week: z.number().min(1).max(5).optional().describe('조회할 주 (베스트셀러 조회 시)')
     }
   },
-  async ({ type, query, isbn, searchType, maxResults, categoryId }) => {
+  async ({ type, query, isbn, searchType, maxResults, categoryId, year, month, week }) => {
     try {
       let books: BookSearchResult[] = [];
 
@@ -1003,6 +1022,18 @@ server.registerTool(
 
         if (categoryId) {
           params.CategoryId = categoryId;
+        }
+
+        if (year) {
+          params.Year = year;
+        }
+        
+        if (month) {
+          params.Month = month;
+        }
+        
+        if (week) {
+          params.Week = week;
         }
 
         const result = await callAladinApi('ItemList.aspx', params);
@@ -1168,7 +1199,8 @@ server.registerTool(
         title = `📚 도서 상세 정보 (ISBN: ${isbn})`;
       } else if (type === 'bestseller') {
         const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
-        title = `📚 베스트셀러 목록${categoryText}`;
+        const timeText = (year && month && week) ? ` (${year}년 ${month}월 ${week}주)` : '';
+        title = `📚 베스트셀러 목록${categoryText}${timeText}`;
       } else if (type === 'new_books') {
         const categoryText = categoryId ? ` (카테고리: ${categoryId})` : '';
         title = `📚 신간 전체 리스트${categoryText}`;
