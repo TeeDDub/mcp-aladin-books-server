@@ -2,6 +2,10 @@
 
 알라딘 도서 검색 API를 활용한 MCP(Model Context Protocol) 서버입니다.
 
+<a href="https://glama.ai/mcp/servers/@TeeDDub/mcp-aladin-books-server">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@TeeDDub/mcp-aladin-books-server/badge" alt="Aladin Book Search Server MCP server" />
+</a>
+
 ## 특징
 
 - **도서 검색**: 제목, 저자, 출판사, 키워드로 도서 검색
@@ -289,4 +293,4 @@ ALADIN_TTB_KEY=your_aladin_ttb_key_here
 
 ## 라이선스
 
-ISC 
+ISC
