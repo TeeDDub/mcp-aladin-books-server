@@ -289,4 +289,4 @@ ALADIN_TTB_KEY=your_aladin_ttb_key_here
 
 ## 라이선스
 
-ISC 
+이 프로젝트는 [MIT 라이선스](./LICENSE)로 배포됩니다.
